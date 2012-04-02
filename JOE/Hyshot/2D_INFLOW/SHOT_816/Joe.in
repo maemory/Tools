@@ -1,0 +1,240 @@
+################################################
+#   Joe.in File for 2D Hyshot Simulations      #
+################################################
+
+################################
+# LOGGING_LEVEL
+#     - DEBUG_HI : show all linear solver residuals
+#     - INFO_LO  : show part of the linear solver residuals
+#     - INFO     : show standard output
+# -----------------------------
+
+LOGGING_LEVEL = INFO             # show part of the linear solver residuals
+
+################################
+# INITIAL CONDITIONS
+# -----------------------------
+
+# -------------------------------
+#     FREESTREAM PROPERTIES
+# -------------------------------
+
+PROD_UQ  = 0.0                  # (1-PROD_UQ) is the dissipation  [-0.8:0]
+MACH     = 7.436               # Mach number
+AOA      = -3.6                # angle of attack
+lowerwall = WALL TEMP = 300.0   # body temperature
+upperwall = WALL TEMP = 300.0   # cowl temperature
+
+# -----------------------------
+# Gas Properties
+# -----------------------------
+
+P_REF = 2014.88
+T_REF = 270.84
+RHO_REF = 0.0259214
+GAMMA = 1.4
+U_INITIAL = 2448.03980162713874887591 -154.01760954306219379646 0.0
+
+MU_REF =  1.716e-5
+MU_MODE = SUTHERLAND
+
+# -----------------------------
+# Mesh/restart file path
+# -----------------------------
+
+#RESTART = /home/memory/cases/Hyshot_NEW/2D_INFLOW_GENERATION/REUSE/init.restart.out
+RESTART = restart.070000.out
+
+################################
+# SOLVER SETTINGS
+# -----------------------------
+
+# -----------------------------
+# CFL Number Condition
+#     - CFL      : constant CFL number in the whole flow field
+#     - CFL_RAMP : ramping of CFL number (only for BACKWARD_EULER), where CFL is initial value
+# -----------------------------
+
+CFL = 6.0
+CFL_RAMP AFTER_ITER=1000  INTERVAL_ITER=500  FACTOR_CFL=1.0  MAX_CFL=6.0 
+
+# -----------------------------
+# Time Stepping
+#     - NSTEPS       : number of time iterations
+#     - TIME_STEP
+#        - SUM_BASED : summation of max timestep from eigenvalues of neighboring cells
+#     - TIME_INTEGRATION
+#        - BACKWARD_EULER_SEMICOUPLED : implicit, coupled NS and chemistry
+#        - BACKWARD_EULER             : implicit, uncoupled NS, turbulence, chemistry
+# -----------------------------
+
+NSTEPS = 100000
+TIME_STEP = SUM_BASED
+TIME_INTEGRATION = BACKWARD_EULER
+
+# -----------------------------
+# Numerical Algorithm
+#     - SPACE_INTEGRATION       : (HLLC) numerical integration method
+#     - SPATIAL_SECOND_ORDER    : use second order accuracy in space
+# -----------------------------
+
+# SPACE_INTEGRATION = HLLC
+SPATIAL_SECOND_ORDER
+
+
+# -----------------------------
+# Linear Solvers
+#     - LINEAR_SOLVER_NS            : (PETSC_GMRES,BCGSTAB) iterative solver method for RANS equations
+#     - LINEAR_SOLVER_NS_TRESHOLDS  : inner loop iters, convergence tolerances
+#     - LINEAR_SOLVER_SCALARS       : (PETSC_GMRES,BCGSTAB) iterative solver method for turbulence scalars
+# -----------------------------
+
+LINEAR_SOLVER_NS = PETSC_GMRES 
+LINEAR_SOLVER_NS_TRESHOLDS  MAX_ITER=30  ABS_RESID=1.0e-8  REL_RESID=1.0e-2
+UNDER_RELAXATION = 0.5
+N_NEWTON_ITER = 1
+
+LINEAR_SOLVER_SCALARS = PETSC_GMRES
+# UNDER_RELAXATION_SCALARS = 1.0
+
+# -----------------------------
+# Gradient Calculation
+#     - GRAD_RECONSTRUCTION     : (GREENGAUSS,LEASt_SQUARES) numerical gradient reconstruction
+# -----------------------------
+
+GRAD_RECONSTRUCTION  SCHEME=LEASTSQUARES  LIMITER=YES  EPS=0.05
+# SCALAR_RECONSTRUCTION = STANDARD
+# VISC_LIM = YES
+
+################################
+#   1-D HEAT RELEASE MODEL
+# -----------------------------
+
+COMBUSTION = 0
+EQUIVALENCE_RATIO = 0.3 0.0 100000.0   # phi
+COMB_D   = 0.75                        # shape of heat release region
+COMB_XC  = 0.05                        # flame lift-off
+COMB_YC  = 0                           # heat release confinement [-1:1] (0 half channel)
+COMB_COMPLETION_RATE = 0.95            
+
+H_COMB = 1.2e8
+F_STOICHIOMETRIC = 0.029
+
+# -------------------------------
+#    VARIABLE PROPERTIES
+# -------------------------------
+
+# File where thermo properties for each species are saved
+THERMO_INPUT_FILE = /home/memory/cases/Hyshot_NEW/2D_INFLOW_GENERATION/REUSE/batesgri.thermo.bin
+# Flag to determine which version of CreateBinFile was used for input (1 = G. Blanquart, 0 otherwise)
+#THERMO_BLANQ_FLAG = 1
+
+NUMBER_SPECIES = 2
+SPECIES = N2 O2
+MIXTURE_COMPO = 0.767 0.233
+
+################################
+# OUTPUT SETTINGS
+# -----------------------------
+
+# -----------------------------
+# CHECK_INTERVAL            : interval print residuals
+# WRITE_RESTART             : write restart interval
+# CONVERGENCE_HISTORY       : write convergence history file (YES/NO)
+# INITIAL_FLOWFIELD_OUTPUT  : output initial flowfield (YES / NO)
+# RESET_STEP                : output starts from iteration=1 (comment out to turn off)
+# RUNTIME                   : hours for simulation to run (stopping criterion)
+# RESID_ENERG_TH            : stop criteria for iterations when energy residual is less then value
+# WRITE_DATA                : solution file specifications
+# -----------------------------
+
+CHECK_INTERVAL = 10
+WRITE_RESTART = 5000
+INITIAL_FLOWFIELD_OUTPUT = NO
+
+#RESET_STEP
+RUNTIME = 23.9
+RESID_ENERG_TH = 1.0e-2
+
+WRITE_DATA FORMAT=TECPLOT NAME=fluid_SST INTERVAL=10000 GEOM=ALL VARS=RHO vel RHOE sos press temp enthalpy gamma muLam muT strMag SST_F1 trans_scale omega kine
+
+
+#################################
+#     BOUNDARY CONDITIONS
+# -------------------------------
+
+# ---- for Navier-Stokes  --------------------------------------------------------------------------
+# boundary_name = HOOK                                  # provide velocity, temperature and pressure
+# boundary_name = CBC ux uy uz temperature pressure
+# boundary_name = CBC_SUBSONIC_INLET ux/vel uy/vel uz/vel Ttot ptot
+# boundary_name = CBC_SUBSONIC_OUTLET pstat
+# boundary_name = SYMMETRY                              # slip BC
+# boundary_name = NEUMANN                               # van Neumann BC
+# boundary_name = WALL                                  # no slip BC with adiabatic wall
+# boundary_name = WALL TEMP=temperature                 # no slip BC with isothermal wall
+# -------------------------------
+
+inlet = CBC 2448.03980162713874887591 -154.01760954306219379646 0.0 270.84 2014.88
+outlet = NEUMANN 
+
+forebody  = WALL TEMP = 300.0
+lowerwall = WALL TEMP = 300.0
+upperwall = WALL TEMP = 300.0
+
+dumpregion = NEUMANN # Shock Trap
+symm = SYMMETRY
+
+# ---- for scalars ---------------------------------------------------------------------------------
+# boundary_name.scalar_name = value       # Dirichlet 
+# boundary_name.scalar_name = HOOK        # HOOK 
+# if no boundary condition is set for scalars: von Neumann BC is applied 
+# -------------------------------
+
+inlet.kine = 902.49304416000000000000
+outlet.kine = 902.49304416000000000000
+forebody.kine = 0.0
+lowerwall.kine = 0.0
+upperwall.kine = 0.0
+
+inlet.omega = 1096.96128412993683021969
+outlet.omega = 1096.96128412993683021969
+forebody.omega = HOOK
+lowerwall.omega = HOOK
+upperwall.omega = HOOK
+
+inlet.nuSA = {NU_SA}
+outlet.nuSA = {NU_SA}
+forebody.nuSA = 0.0
+lowerwall.nuSA = 0.0
+upperwall.nuSA = 0.0
+
+#################################
+# TURBULENCE MODELS
+# -------------------------------
+
+# -------------------------------
+# SST KOM models
+#   - INITIAL_CONDITION_TURB  : initial values for kine, omega
+#   - SST_LIMIT_PK            : production limiter
+#   - SST_LIMITER_SHEARSTRESS : shear stress limiter
+# -------------------------------
+
+INITIAL_CONDITION_TURB = 902.49304416000000000000 1096.96128412993683021969
+
+SST_LIMIT_PK = 1
+SST_LIMITER_SHEARSTRESS = 1
+
+
+#################################
+# TRANSITION TO TURBULENCE
+#
+#   - TRANSITION_RAMP  : location on ramp
+#   - TRANSITION_COWL  : location on cowl
+#   - TRANSITION_BODY  : location on body
+#     -- X : x location upstream of which laminar BL is enforced
+# -------------------------------
+
+TRANSITION_RAMP X = 0.145
+TRANSITION_COWL X = 0.341
+TRANSITION_BODY X = 0.400
+

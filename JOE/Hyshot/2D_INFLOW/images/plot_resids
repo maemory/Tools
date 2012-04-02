@@ -1,0 +1,13 @@
+#!/bin/bash
+
+gnuplot plot_resids.gnu
+
+# Old method
+#convert -density 300 temp.eps residuals.png
+
+# New method
+gs -sDEVICE=jpeg -dJPEGQ=100 -dNOPAUSE -dBATCH -dSAFER -r300 -sOutputFile=residuals.jpg temp.eps
+mogrify -trim -resize 800x600 residuals.jpg
+
+# clean up eps file
+rm temp.eps

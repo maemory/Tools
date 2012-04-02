@@ -1,0 +1,30 @@
+#
+# Makefile.WCR.in
+#
+# MUST have loaded specific modules:
+# module load intel/intel-12 mvapich/1.2RC1-intel-12-hybrid
+# Michael Emory
+
+MKL_LIB_DIR=/opt/intel/mkl/10.1.2.024/lib/em64t
+INTEL_LIB_DIR=/opt/intel/Compiler/11.1/064/lib/intel64
+
+#-----------PETSC---------------#
+PETSC_DIR = /share/apps/petsc-3.0.0-p4/mvapich-1.2RC1-intel-12-hybrid
+PETSC_INC = -I${PETSC_DIR}/include
+include ${PETSC_DIR}/conf/variables
+
+#-----------PARMETIS------------#
+PARMETIS_INC = -I/share/apps/lib/parmetis/3.1/mvapich-1.2RC1-intel-12-hybrid/include
+PARMETIS_LIB = -L/share/apps/lib/parmetis/3.1/mvapich-1.2RC1-intel-12-hybrid/lib -lparmetis
+METIS_LIB = -lmetis
+
+#-----------HYPRE---------------#
+#HYPRE_INC = -I/share/apps/lib/hypre/2.6.0b/mvapich-1.2RC1-intel-12-hybrid/include
+#HYPRE_LIB = -L/share/apps/lib/hypre/2.6.0b/mvapich-1.2RC1-intel-12-hybrid/lib/ -lHYPRE
+
+#-----------C Compiler----------#
+CC = /share/apps/mvapich/1.2RC1/intel-12-hybrid/bin/mpicxx
+CFLAGS = -O3 -no-prec-div -DMPI_OFFSET_IS_LONG_LONG_INT -DWITH_PARMETIS -DNO_ASSERT -DWITH_PETSC -I. $(PARMETIS_INC) $(PETSC_INC)
+CLIBS = $(PARMETIS_LIB) $(MPI_LIBS) $(METIS_LIB) $(PETSC_LIB)
+
+

@@ -1,0 +1,16 @@
+#! /bin/bash
+
+qstat -f JOBID -n | sed '1,6d' | tr '+' '\n' | tr '/' '\n' | grep compute | sed 's/ //g' | uniq > ghost_check.txt
+
+for ((j=1;j<=$( wc -l ghost_check.txt | awk '{print $1}' );j+=1))
+do
+	NODE_NAME=$( sed -n ''$j'p' ghost_check.txt )
+	ssh $NODE_NAME 'ps ax -o "uid user %cpu %mem pid command" --sort -%cpu' > all_processes.txt
+	awk '$1 >=500 && $1!='$UID' && $1!="UID"' all_processes.txt > uid_processes.txt
+	sed -i "s/$/ $NODE_NAME/g" uid_processes.txt
+	sed -i "s%$%  $(pwd)%" uid_processes.txt
+	sed -i "s%$%  $(date)%" uid_processes.txt
+	[ -s uid_processes.txt ] && cat uid_processes.txt >> ghost_jobs.txt
+done
+
+rm ghost_check.txt all_processes.txt uid_processes.txt

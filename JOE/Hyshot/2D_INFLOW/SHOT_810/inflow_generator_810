@@ -1,0 +1,113 @@
+#!/bin/bash
+
+REUSE_DIR=/home/memory/cases/Hyshot_NEW/2D_INFLOW_GENERATION/REUSE
+FINAL_DIR=/home/memory/cases/Hyshot_NEW/2D_INFLOW_GENERATION/SHOT_810
+
+# file to generate parametrized inflow-profiles for 2D Hyshot simulation
+
+# angles of attack to consider
+#AOA=(-2.6 -3.6 -4.6)
+AOA=(-3.6)
+
+# turbulence intensities to consider
+#turbI=(0.001 0.003 0.01)
+turbI=(0.01)
+
+# turbulence models to consider
+turbMod=(SST) #KOM, SST, add SA later when certain of nuSA calculation
+
+# basic math definitions
+PI=$(echo "4*a(1)" | bc -l)
+C_mu=0.09
+
+#output settings
+OUT_INTERVAL=5000
+REST_INTERVAL=5000
+
+#-----------------------
+# Shot 810: ER=0.351
+#-----------------------
+
+#define turbuelnt length
+L_t=0.050		# [m]
+
+Pstat=2056.80		# [Pa]
+Tstat=264.58		# [K]
+velocity=2383.15	# [m/s]
+Mach=7.309
+rhostat=0.0270867	# [kg/m^3]
+
+echo "generating input files for shot 810"
+echo "Fixed values:"
+echo "Pstat   = "$Pstat
+echo "Tstat   = "$Tstat
+echo "rhostat = "$rhostat
+echo "Mach    = "$Mach
+
+for aoa in "${AOA[@]}"
+do
+  for ti in "${turbI[@]}"
+  do
+    for model in "${turbMod[@]}"
+    do
+	echo "new input file started:"
+	echo " - angle of attack = "$aoa
+	echo " - turb. intensity = "$ti
+	echo " - turb. model     = "$model
+
+	# copy template file
+	cp $REUSE_DIR/Joe.in.template temp.in
+
+	# update terms in temp.in file
+	sed -i 's/{MACH}/'$Mach'/g' 		temp.in
+	sed -i 's/{AOA}/'$aoa'/g' 		temp.in
+	sed -i 's/{T_STAT}/'$Tstat'/g' 		temp.in
+        sed -i 's/{P_STAT}/'$Pstat'/g'  	temp.in
+        sed -i 's/{RHO_STAT}/'$rhostat'/g'	temp.in
+
+	# convert aoa to radians
+	raoa=$(echo "$aoa*($PI/180)" | bc -l)
+	velx=$(echo "$velocity*c($raoa)" | bc -l)
+        vely=$(echo "$velocity*s($raoa)" | bc -l)
+        velz=0.0
+
+        sed -i 's/{VEL-X}/'$velx'/g'      temp.in
+        sed -i 's/{VEL-Y}/'$vely'/g'      temp.in
+        sed -i 's/{VEL-Z}/'$velz'/g'      temp.in
+
+	# Compute turbulence parameters
+	if [ "$model" == "SST" -o "$model" == "KOM" ]; then
+
+	  k=$(echo "(3/2)*($velocity*$ti)^2" | bc -l)
+          omega=$(echo "sqrt($k)/(sqrt(sqrt($C_mu)) * $L_t)" | bc -l)
+
+          echo " - kine           = "$k
+          echo " - omega          = "$omega
+
+          sed -i 's/{KINE}/'$k'/g'             	temp.in
+          sed -i 's/{OMEGA}/'$omega'/g'        	temp.in
+	  sed -i 's/{OUTPUT_VARS}/omega kine/g'	temp.in
+
+	elif [ "$model" == "SA" ]; then
+	
+	  nusa=$(echo "sqrt(3/2)*$velocity*$ti*$L_t" | bc -l)
+
+          echo " - nuSA          = "$nusa
+
+          sed -i 's/{NU_SA}/'$nusa'/g'          temp.in
+	  sed -i 's/{OUTPUT_VARS}/nuSA/g'       temp.in
+
+	fi
+
+	sed -i 's/{RESTART_INTERVAL}/'$REST_INTERVAL'/g'     temp.in
+        sed -i 's/{OUTPUT_INTERVAL}/'$OUT_INTERVAL'/g'       temp.in
+
+	mkdir $FINAL_DIR/$model"_aoa"$aoa"_ti"$ti
+
+        mv temp.in $FINAL_DIR/$model"_aoa"$aoa"_ti"$ti/Joe.in
+
+    done
+  done
+done
+
+
