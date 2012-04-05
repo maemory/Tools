@@ -106,7 +106,8 @@ void compute_delta_ij(cell_t c, Thread *t) {
 double eval_switch(cell_t c, Thread *t) {
 	/* smooth transition between active (1) and inactive (0) */
 	double CUTOFF = RP_Get_Real("uq/eval_cutoff");
-	double my_z = 50.0 * (C_WALL_DIST(c, t) - CUTOFF);
+	double SMOOTH = RP_Get_Real("uq/eval_smooth");
+	double my_z = SMOOTH * (C_WALL_DIST(c, t) - CUTOFF);
 	double my_switch = MAX(MIN(1.0, 0.5 - 0.5 * tanh(my_z)), 0.0);
 	/* smooth towards the symmetry planes.... */
 	/*
@@ -123,7 +124,8 @@ double eval_switch(cell_t c, Thread *t) {
 double tke_switch(cell_t c, Thread *t) {
 	/* smooth transition between active (1) and inactive (0) */
 	double CUTOFF = RP_Get_Real("uq/tke_cutoff");
-	double my_z = 50.0 * (C_WALL_DIST(c, t) - CUTOFF);
+	double SMOOTH = RP_Get_Real("uq/tke_smooth");
+	double my_z = SMOOTH * (C_WALL_DIST(c, t) - CUTOFF);
 	double my_switch = MAX(MIN(1.0, 0.5 - 0.5 * tanh(my_z)), 0.0);
 
 	return my_switch;
@@ -133,7 +135,8 @@ double tke_switch(cell_t c, Thread *t) {
 double evec_switch(cell_t c, Thread *t) {
 	/* smooth transition between active (1) and inactive (0) */
 	double CUTOFF = RP_Get_Real("uq/evec_cutoff");
-	double my_z = 50.0 * (C_WALL_DIST(c, t) - CUTOFF);
+	double SMOOTH = RP_Get_Real("uq/evec_smooth");
+	double my_z = SMOOTH * (C_WALL_DIST(c, t) - CUTOFF);
 	double my_switch = MAX(MIN(1.0, 0.5 - 0.5 * tanh(my_z)), 0.0);
 
 	return my_switch;
