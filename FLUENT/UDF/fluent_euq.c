@@ -28,7 +28,9 @@ void compute_delta_ij(cell_t c, Thread *t);
 void compute_s_ij(cell_t c, Thread *t);
 void compute_barycentric_map(cell_t c, Thread *t, double my_tke,
 		double my_rsm[3][3]);
-double f_switch(cell_t c, Thread *t);
+double eval_switch(cell_t c, Thread *t);
+double evec_switch(cell_t c, Thread *t);
+double tke_switch(cell_t c, Thread *t);
 
 /* User-defined memory storage*/
 enum {
@@ -100,10 +102,10 @@ void compute_delta_ij(cell_t c, Thread *t) {
 	}
 }
 
-/* Sets the Sensor Region */
-double f_switch(cell_t c, Thread *t) {
+/* Sets the Eval Sensor Region */
+double eval_switch(cell_t c, Thread *t) {
 	/* smooth transition between active (1) and inactive (0) */
-	double CUTOFF = RP_Get_Real("uq/cutoff");
+	double CUTOFF = RP_Get_Real("uq/eval_cutoff");
 	double my_z = 50.0 * (C_WALL_DIST(c, t) - CUTOFF);
 	double my_switch = MAX(MIN(1.0, 0.5 - 0.5 * tanh(my_z)), 0.0);
 	/* smooth towards the symmetry planes.... */
@@ -114,6 +116,26 @@ double f_switch(cell_t c, Thread *t) {
 	 double sine_switch = sin(2.0*teta)*sin(2.0*teta);
 	 my_switch *=sine_switch;
 	 */
+	return my_switch;
+}
+
+/* Sets the tke Sensor Region */
+double tke_switch(cell_t c, Thread *t) {
+	/* smooth transition between active (1) and inactive (0) */
+	double CUTOFF = RP_Get_Real("uq/tke_cutoff");
+	double my_z = 50.0 * (C_WALL_DIST(c, t) - CUTOFF);
+	double my_switch = MAX(MIN(1.0, 0.5 - 0.5 * tanh(my_z)), 0.0);
+
+	return my_switch;
+}
+
+/* Sets the Evec Sensor Region */
+double evec_switch(cell_t c, Thread *t) {
+	/* smooth transition between active (1) and inactive (0) */
+	double CUTOFF = RP_Get_Real("uq/evec_cutoff");
+	double my_z = 50.0 * (C_WALL_DIST(c, t) - CUTOFF);
+	double my_switch = MAX(MIN(1.0, 0.5 - 0.5 * tanh(my_z)), 0.0);
+
 	return my_switch;
 }
 
@@ -192,10 +214,10 @@ void compute_barycentric_map(cell_t c, Thread *t, double my_tke, double my_rsm[3
 		new_bcoord[1] = corner[2][1];
 	}
 
-	bary_coordinates[0] = (1.0 - f_switch(c, t)) * bary_coordinates[0]
-	                                                                + f_switch(c, t) * new_bcoord[0];
-	bary_coordinates[1] = (1.0 - f_switch(c, t)) * bary_coordinates[1]
-	                                                                + f_switch(c, t) * new_bcoord[1];
+	bary_coordinates[0] = (1.0 - eval_switch(c, t)) * bary_coordinates[0]
+	                                                                + eval_switch(c, t) * new_bcoord[0];
+	bary_coordinates[1] = (1.0 - eval_switch(c, t)) * bary_coordinates[1]
+	                                                                + eval_switch(c, t) * new_bcoord[1];
 
 	/* -----------------------
 	 * Eigenvector Modification
@@ -237,8 +259,8 @@ void compute_barycentric_map(cell_t c, Thread *t, double my_tke, double my_rsm[3
 
 	for (m = 0; m < 3; m++) {
 		for (n = 0; n < 3; n++) {
-			eigv[m][n] = (1.0 - f_switch(c, t)) * eigv[m][n]
-			                                              + f_switch(c, t) * new_eigv[m][n];
+			eigv[m][n] = (1.0 - evec_switch(c, t)) * eigv[m][n]
+			                                              + evec_switch(c, t) * new_eigv[m][n];
 		}
 	}
 
@@ -250,7 +272,7 @@ void compute_barycentric_map(cell_t c, Thread *t, double my_tke, double my_rsm[3
 
 	double tke_perturbation = RP_Get_Real("uq/tke_perturbation");
 
-	new_tke = my_tke * (1.0 + f_switch(c, t) * tke_perturbation);
+	new_tke = my_tke * (1.0 + tke_switch(c, t) * tke_perturbation);
 
 	/*-------------------------------------------------------------*/
 	/* uncertainty injection - end                                 */

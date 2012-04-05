@@ -1,28 +1,55 @@
 rcd baseline_abid
 
-(define my_iters     500)
-(define my_component 2)
-(define my_shift     0.0)
-(define my_tke       0.00)
-(define my_theta     0.0)
-(define my_phi       0.0)
-(define my_psi       0.0)
-(define my_cutoff    0.00)
+(define my_iters     300)
+
+;------------------------------
+; eval perturbation parameters
+;------------------------------
+(define my_component   2)
+(define eval_cutoff    0.00)
+
+(rp-var-define 'uq/componentiality my_component 'integer #f)
+(rp-var-define 'uq/eval_cutoff eval_cutoff 'real #f)
+
+;------------------------------
+; tke perturbation parameters
+;------------------------------
+(define my_tke        0.00)
+(define tke_cutoff    0.00)
+
+(rp-var-define 'uq/tke_perturbation my_tke 'real #f)
+(rp-var-define 'uq/tke_cutoff tke_cutoff 'real #f)
+
+;------------------------------
+; evec perturbation parameters
+;------------------------------
+(define my_theta       0.0)
+(define my_phi         0.0)
+(define my_psi         0.0)
+(define evec_cutoff    0.00)
 
 (rp-var-define 'uq/theta_perturbation my_theta 'real #f)
 (rp-var-define 'uq/phi_perturbation my_phi 'real #f)
 (rp-var-define 'uq/psi_perturbation my_psi 'real #f)
-(rp-var-define 'uq/tke_perturbation my_tke 'real #f)
-(rp-var-define 'uq/shift my_shift 'real #f)
-(rp-var-define 'uq/componentiality my_component 'integer #f)
-(rp-var-define 'uq/cutoff my_cutoff 'real #f)
+(rp-var-define 'uq/evec_cutoff evec_cutoff 'real #f)
 
+;------------------------------
+; Under Relaxation
+;------------------------------
+(define my_shift     0.0)
+
+(rp-var-define 'uq/shift my_shift 'real #f)
+
+;------------------------------
+; Solver Settings
+;  - solve/set guide:
+;      20 for SIMPLE
+;      21 for SIMPLEC
+;      22 for PISO
+;      24 for Coupled
+;------------------------------
 solve/set p-v-co 24
-;;	20 for SIMPLE
-;;	21 for SIMPLEC
-;;	22 for PISO
-;;	24 for Coupled
 solve/init init
 it my_iters
 
-/* wcd final */
+;wcd final
