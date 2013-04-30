@@ -1,12 +1,17 @@
 %% Make a Reynolds stress tensor glyph
 clear all; clc; close all;
+mex gen_RSTglyph_magnitude.cpp;
+mex gen_HWYglyph_magnitude.cpp;
+
 % Rotation
-theta = 45;
+theta = 65;
 
 %glyph to plot
-gType=1;
+gType = 'HWY';
 
-switch gType
+tensor=2;
+
+switch tensor
     case 1
         % 1-comp
         uiuj=[ 1   0   0;...
@@ -14,14 +19,14 @@ switch gType
                0   0   0];
     case 2
         % 2-comp
-        uiuj=[ 0.5   0   0;...
+        uiuj=[ 0.50001   0   0;...
                0   0   0;...
-               0   0   0.5];
+               0   0   .4999];
     case 3
         % 3-comp
-        uiuj=[ 1/3   0   0;...
-               0   1/3   0;...
-               0   0   1/3];
+        uiuj=[ .3334   0   0;...
+               0   .3332   0;...
+               0   0   .3333];
     case 4
         % plane-strain
         uiuj=[ .4333   0   0;...
@@ -100,8 +105,12 @@ X = cos(angle);
 Y = sin(angle);
 Z = zeros(1,length(angle));
 
-[X1,Y1,Z1,C1] = gen_glyph_magnitude(uiuj,X,Y,Z);
-
+if strcmp(gType,'RST') 
+    [X1,Y1,Z1,C1] = gen_RSTglyph_magnitude(uiuj,X,Y,Z);
+elseif strcmp(gType,'HWY')
+    [X1,Y1,Z1,C1] = gen_HWYglyph_magnitude(uiuj,X,Y,Z);
+end
+    
 figure('Position',[100 screenH/2 600 600],'paperpositionmode','auto', 'color','white','InvertHardcopy','off');
 
 hold on;
@@ -115,7 +124,7 @@ colormap('jet');caxis([0 1]);
 if strcmp(cb,'yes')
     colorbar('FontName','Times');
 end
-axis_length=1;
+axis_length=.5;
 axis equal;axis([-axis_length axis_length -axis_length axis_length -axis_length axis_length]);
 grid on;box on;
 view([0 0 1])
@@ -129,7 +138,11 @@ X = cos(angle);
 Z = sin(angle);
 Y = zeros(1,length(angle));
 
-[X2,Y2,Z2,C2] = gen_glyph_magnitude(uiuj,X,Y,Z);
+if strcmp(gType,'RST') 
+    [X2,Y2,Z2,C2] = gen_RSTglyph_magnitude(uiuj,X,Y,Z);
+elseif strcmp(gType,'HWY')
+    [X2,Y2,Z2,C2] = gen_HWYglyph_magnitude(uiuj,X,Y,Z);
+end
 
 figure('Position',[700 screenH/2 600 600],'paperpositionmode','auto', 'color','white','InvertHardcopy','off');
 
@@ -144,7 +157,7 @@ colormap('jet');caxis([0 1]);
 if strcmp(cb,'yes')
     colorbar('FontName','Times');
 end
-axis_length=1;
+axis_length=.5;
 axis equal;axis([-axis_length axis_length -axis_length axis_length -axis_length axis_length]);
 grid on;box on;
 view([0 1 0])
@@ -156,7 +169,11 @@ Y = cos(angle);
 Z = sin(angle);
 X = zeros(1,length(angle));
 
-[X3,Y3,Z3,C3] = gen_glyph_magnitude(uiuj,X,Y,Z);
+if strcmp(gType,'RST') 
+    [X3,Y3,Z3,C3] = gen_RSTglyph_magnitude(uiuj,X,Y,Z);
+elseif strcmp(gType,'HWY')
+    [X3,Y3,Z3,C3] = gen_HWYglyph_magnitude(uiuj,X,Y,Z);
+end
 
 figure('Position',[1300 screenH/2 600 600],'paperpositionmode','auto', 'color','white','InvertHardcopy','off');
 
@@ -171,7 +188,7 @@ colormap('jet');caxis([0 1]);
 if strcmp(cb,'yes')
     colorbar('FontName','Times');
 end
-axis_length=1;
+axis_length=.5;
 axis equal;axis([-axis_length axis_length -axis_length axis_length -axis_length axis_length]);
 grid on;box on;
 view([1 0 0])
@@ -180,11 +197,11 @@ hold off;
 
 %% Export
 if (0)
-    image_file = sprintf('/home/memory/Documents/Latex-Docs/Thesis/Chapter41/images/chan_glyph_XY.eps');
+    image_file = sprintf('/home/memory/Documents/Latex-Docs/Thesis/Chapter22/images/C%d_%sglyph_XY.eps',tensor,gType);
     print('-f1','-depsc2','-noui','-r200',image_file);
-    image_file = sprintf('/home/memory/Documents/Latex-Docs/Thesis/Chapter41/images/chan_glyph_XZ.eps');
+    image_file = sprintf('/home/memory/Documents/Latex-Docs/Thesis/Chapter22/images/C%d_%sglyph_XZ.eps',tensor,gType);
     print('-f2','-depsc2','-noui','-r200',image_file);
-    image_file = sprintf('/home/memory/Documents/Latex-Docs/Thesis/Chapter41/images/chan_glyph_YZ.eps');
+    image_file = sprintf('/home/memory/Documents/Latex-Docs/Thesis/Chapter22/images/C%d_%sglyph_YZ.eps',tensor,gType);
     print('-f3','-depsc2','-noui','-r200',image_file);
 end
 
@@ -192,7 +209,12 @@ end
 
 % build unit sphere
 [X,Y,Z]=sphere(200);
-[X4,Y4,Z4,C4] = gen_glyph_magnitude(uiuj,X,Y,Z);
+
+if strcmp(gType,'RST') 
+    [X4,Y4,Z4,C4] = gen_RSTglyph_magnitude(uiuj,X,Y,Z);
+elseif strcmp(gType,'HWY')
+    [X4,Y4,Z4,C4] = gen_HWYglyph_magnitude(uiuj,X,Y,Z);
+end
 
 % setup figures
 scrsz = get(0,'ScreenSize');
@@ -204,8 +226,8 @@ figure('Position',[200 screenH/4 700 600],'paperpositionmode','auto', 'color','w
 hold on;
 set(gca,'FontName','Times');
 glyphsurf=surf(X4,Y4,Z4,C4,'EdgeColor','k','EdgeAlpha',0,'FaceColor','interp','FaceAlpha',0.5,'FaceLighting','phong');
-colormap('jet');caxis([0 1]);colorbar('FontName','Times');
-axis_length=1;
+colormap('jet');caxis([0 1]);colorbar('FontName','Times','location','WestOutside');
+axis_length=0.5;
 axis equal;axis([-axis_length axis_length -axis_length axis_length -axis_length axis_length]);
 
 plot3(x1,y1,z1,'b',x2,y2,z2,'g',x3,y3,z3,'r','LineWidth',1.5);
@@ -214,13 +236,13 @@ grid on;box on;
 view(-15,55);
 xlabel('X');ylabel('Y');zlabel('Z','Rotation',0);
 
-light('Position',[3 2 0],'Style','local');
+light('Position',[-1 -1 1],'Style','local');
 
 hold off
 
 %% Export
 if (0)
-    image_file = sprintf('/home/memory/Documents/Latex-Docs/Thesis/Chapter41/images/chan_glyph_3D.eps');
+    image_file = sprintf('/home/memory/Documents/Latex-Docs/Thesis/Chapter22/images/C%d_%sglyph_3D.eps',tensor,gType);
     print('-f4','-depsc2','-noui','-r200',image_file);
 end
 
